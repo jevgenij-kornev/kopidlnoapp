@@ -1,18 +1,15 @@
-package com.example.kopidlnoapp.runner;
+package com.example.kopidlnoapp.service;
 
-import com.example.kopidlnoapp.service.FileDownloadService;
-import com.example.kopidlnoapp.service.XmlParserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component
-public class FileDownloadRunner implements CommandLineRunner {
+@Service
+public class ApplicationInitializerService {
 
-    private static final Logger logger = LoggerFactory.getLogger(FileDownloadRunner.class);
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationInitializerService.class);
 
     @Autowired
     private FileDownloadService fileDownloadService;
@@ -20,8 +17,7 @@ public class FileDownloadRunner implements CommandLineRunner {
     @Autowired
     private XmlParserService xmlParserService;
 
-    @Override
-    public void run(String... args) throws Exception {
+    public void initialize() throws Exception {
         fileDownloadService.downloadAndUnzip();
         Document doc = xmlParserService.loadXMLDocument("kopidlno.xml");
 
