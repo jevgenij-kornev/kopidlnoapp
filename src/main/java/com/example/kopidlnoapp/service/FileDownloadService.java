@@ -10,19 +10,30 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 @Service
 public class FileDownloadService {
 
+    @Value("${file.temp-dir:temp}")
+    private String tempDir;
+
     @Value("${file.url}")
     private String fileUrl;
 
     @Value("${file.output}")
-    private String outputFile;
+    private String outputFileName;
 
     public void downloadAndUnzip() throws IOException, InterruptedException {
+        Path tempDirPath = Paths.get(tempDir);
+        if (!Files.exists(tempDirPath)) {
+            Files.createDirectory(tempDirPath);
+        }
+
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(fileUrl))
@@ -31,18 +42,19 @@ public class FileDownloadService {
         HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
         try (InputStream in = response.body();
-             FileOutputStream fos = new FileOutputStream(outputFile);
              ZipInputStream zis = new ZipInputStream(in)) {
 
             ZipEntry zipEntry = zis.getNextEntry();
-            if (zipEntry != null && !zipEntry.isDirectory()) {
-                byte[] buffer = new byte[1024];
-                int len;
-                while ((len = zis.read(buffer)) > 0) {
-                    fos.write(buffer, 0, len);
+            if (zipEntry != null) {
+                try (FileOutputStream out = new FileOutputStream(tempDir + "/" + outputFileName)) {
+                    byte[] buffer = new byte[1024];
+                    int len;
+                    while ((len = zis.read(buffer)) > 0) {
+                        out.write(buffer, 0, len);
+                    }
                 }
+                zis.closeEntry();
             }
-            zis.closeEntry();
         }
     }
 }
