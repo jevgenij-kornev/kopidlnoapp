@@ -1,6 +1,7 @@
 package com.example.kopidlnoapp.service;
 
 import com.example.kopidlnoapp.util.ZipFileCreator;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -10,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -19,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -38,8 +41,6 @@ class FileDownloadServiceTest {
     private final Path xmlFilePath = Paths.get("src/test/resources/test-to-zip.xml");
     private final Path outputPath = Paths.get("src/test/resources/temp/unzipped.xml");
 
-    // TODO поменять адрес сохраняемого файла.
-    // TODO добавить логику на удаление файла kopidlno.xml
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -74,8 +75,16 @@ class FileDownloadServiceTest {
 
         assertTrue(Files.exists(outputPath));
 
-        // TODO добавить сравнения самих файлов.
+        byte[] originalFileContent = Files.readAllBytes(xmlFilePath);
+        byte[] unzippedFileContent = Files.readAllBytes(outputPath);
+        assertEquals(new String(originalFileContent), new String(unzippedFileContent), "The content of the original and unzipped files should be the same.");
 
         logger.info("Output file path: {}", outputPath.toAbsolutePath());
+    }
+
+    @AfterEach
+    void tearDown() throws IOException {
+        Files.deleteIfExists(outputPath);
+        Files.deleteIfExists(outputPath.getParent());
     }
 }
