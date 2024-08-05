@@ -1,5 +1,8 @@
 package com.example.kopidlnoapp.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +22,8 @@ import java.util.zip.ZipInputStream;
 @Service
 public class FileDownloadService {
 
+    private static final Logger logger = LoggerFactory.getLogger(FileDownloadService.class);
+
     @Value("${file.temp-dir:temp}")
     private String tempDir;
 
@@ -28,25 +33,39 @@ public class FileDownloadService {
     @Value("${file.output}")
     private String outputFileName;
 
+    @Autowired
+    private final HttpClient httpClient;
+
+    public FileDownloadService(@Value("${file.temp-dir:temp}") String tempDir,
+                               @Value("${file.url}") String fileUrl,
+                               @Value("${file.output}") String outputFileName,
+                               HttpClient httpClient) {
+        this.tempDir = tempDir;
+        this.fileUrl = fileUrl;
+        this.outputFileName = outputFileName;
+        this.httpClient = httpClient;
+    }
+
     public void downloadAndUnzip() throws IOException, InterruptedException {
         Path tempDirPath = Paths.get(tempDir);
         if (!Files.exists(tempDirPath)) {
             Files.createDirectory(tempDirPath);
+            logger.info("Temporary directory created at: {}", tempDirPath.toAbsolutePath());
         }
 
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(fileUrl))
                 .build();
 
-        HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+        HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
         try (InputStream in = response.body();
              ZipInputStream zis = new ZipInputStream(in)) {
 
             ZipEntry zipEntry = zis.getNextEntry();
             if (zipEntry != null) {
-                try (FileOutputStream out = new FileOutputStream(tempDir + "/" + outputFileName)) {
+                Path tempFilePath = tempDirPath.resolve(zipEntry.getName());
+                try (FileOutputStream out = new FileOutputStream(tempFilePath.toString())) {
                     byte[] buffer = new byte[1024];
                     int len;
                     while ((len = zis.read(buffer)) > 0) {
@@ -54,6 +73,12 @@ public class FileDownloadService {
                     }
                 }
                 zis.closeEntry();
+
+                Path outputFilePath = tempDirPath.resolve(outputFileName);
+                Files.move(tempFilePath, outputFilePath);
+                logger.info("File extracted and renamed to: {}", outputFilePath.toAbsolutePath());
+            } else {
+                logger.warn("No entry found in the ZIP file.");
             }
         }
     }
