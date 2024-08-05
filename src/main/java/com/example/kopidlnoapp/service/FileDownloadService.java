@@ -33,9 +33,9 @@ public class FileDownloadService {
     @Value("${file.output}")
     private String outputFileName;
 
-    @Autowired
     private final HttpClient httpClient;
 
+    @Autowired
     public FileDownloadService(@Value("${file.temp-dir:temp}") String tempDir,
                                @Value("${file.url}") String fileUrl,
                                @Value("${file.output}") String outputFileName,
@@ -49,7 +49,7 @@ public class FileDownloadService {
     public void downloadAndUnzip() throws IOException, InterruptedException {
         Path tempDirPath = Paths.get(tempDir);
         if (!Files.exists(tempDirPath)) {
-            Files.createDirectory(tempDirPath);
+            Files.createDirectories(tempDirPath);
             logger.info("Temporary directory created at: {}", tempDirPath.toAbsolutePath());
         }
 
@@ -75,6 +75,9 @@ public class FileDownloadService {
                 zis.closeEntry();
 
                 Path outputFilePath = tempDirPath.resolve(outputFileName);
+                if (Files.exists(outputFilePath)) {
+                    Files.delete(outputFilePath);
+                }
                 Files.move(tempFilePath, outputFilePath);
                 logger.info("File extracted and renamed to: {}", outputFilePath.toAbsolutePath());
             } else {
