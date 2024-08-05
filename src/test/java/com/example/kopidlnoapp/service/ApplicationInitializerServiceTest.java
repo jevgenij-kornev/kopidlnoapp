@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class ApplicationInitializerServiceTest {
 
