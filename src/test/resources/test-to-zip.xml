@@ -1,3 +1,15 @@
-<test>
-    <message>Hello, World!</message>
-</test>
+<rootElement xmlns:obec="urn:cz:isvs:ruian:schemas:ObecIntTypy:v1" xmlns:castobce="urn:cz:isvs:ruian:schemas:CastObceIntTypy:v1">
+    <obec:Obce>
+        <obec:Obec>
+            <obec:Kod>12345</obec:Kod>
+            <obec:Nazev>Test Municipality</obec:Nazev>
+        </obec:Obec>
+    </obec:Obce>
+    <castobce:CastiObci>
+        <castobce:CastObce>
+            <castobce:Kod>67890</castobce:Kod>
+            <castobce:Nazev>Test Municipality Part</castobce:Nazev>
+            <obec:Kod>12345</obec:Kod>
+        </castobce:CastObce>
+    </castobce:CastiObci>
+</rootElement>
